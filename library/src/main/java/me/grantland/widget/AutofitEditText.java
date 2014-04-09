@@ -1,9 +1,11 @@
 package me.grantland.widget;
 
 import me.grantland.autofittextview.R;
+import android.annotation.TargetApi;
 import android.content.Context;
 import android.content.res.Resources;
 import android.content.res.TypedArray;
+import android.os.Build;
 import android.text.Layout;
 import android.text.StaticLayout;
 import android.text.TextPaint;
@@ -11,6 +13,7 @@ import android.util.AttributeSet;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.util.TypedValue;
+import android.view.KeyEvent;
 import android.widget.EditText;
 
 /**
@@ -35,6 +38,8 @@ public class AutofitEditText extends EditText {
     private float mMaxTextSize;
     private float mPrecision;
     private TextPaint mPaint;
+    
+    private OnKeyPreImeListener mOnKeyPreImeListener;
 
     public AutofitEditText(Context context) {
         super(context);
@@ -49,6 +54,21 @@ public class AutofitEditText extends EditText {
     public AutofitEditText(Context context, AttributeSet attrs, int defStyle) {
         super(context, attrs, defStyle);
         init(context, attrs, defStyle);
+    }
+    
+    @TargetApi(Build.VERSION_CODES.CUPCAKE)
+	@Override
+    public boolean onKeyPreIme(int keyCode, KeyEvent event) {
+    	if(mOnKeyPreImeListener != null) {
+    		if(mOnKeyPreImeListener.onKeyPreIme(keyCode, event)) {
+    			return true;
+    		}
+    	}
+    	return super.onKeyPreIme(keyCode, event);
+    }
+    
+    public void setOnKeyPreImeListener(OnKeyPreImeListener listener) {
+    	mOnKeyPreImeListener = listener;
     }
 
     private void init(Context context, AttributeSet attrs, int defStyle) {
@@ -277,7 +297,7 @@ public class AutofitEditText extends EditText {
             super.setTextSize(TypedValue.COMPLEX_UNIT_PX, size);
         }
     }
-
+    
     /**
      * Recursive binary search to find the best size for the text
      */
@@ -357,5 +377,9 @@ public class AutofitEditText extends EditText {
         if (w != oldw) {
             refitText();
         }
+    }
+    
+    public interface OnKeyPreImeListener {
+    	public boolean onKeyPreIme(int keyCode, KeyEvent event);
     }
 }
